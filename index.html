@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Para mi compañera de ruta ❤️</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,500&family=Caveat:wght@600&family=Plus+Jakarta+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #f6f2eb;
+      color: #4a453e;
+    }
+    .serif-title { font-family: 'Cormorant Garamond', serif; }
+    .handwriting { font-family: 'Caveat', cursive; }
+    
+    .fade-in { animation: fadeIn 0.8s ease-in forwards; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes spin-slow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .spinning { animation: spin-slow 4s linear infinite; }
+
+    /* Animación de llama de vela */
+    @keyframes flicker {
+      0%, 100% { transform: scale(1) rotate(-2deg); opacity: 1; }
+      50% { transform: scale(1.1) rotate(2deg); opacity: 0.85; }
+    }
+    .llama-viva {
+      animation: flicker 0.8s infinite alternate;
+      transform-origin: bottom center;
+    }
+
+    /* Efecto Tarjeta Rasca y Gana */
+    .rasca-card {
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .rasca-cover {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, #c59b27 0%, #8c6713 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
+      z-index: 10;
+      border-radius: 0.375rem;
+    }
+    .rasca-card.raspado .rasca-cover {
+      transform: translateY(-100%);
+      opacity: 0;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-5 selection:bg-rose-200 relative">
+
+  <!-- REPRODUCTOR DE MÚSICA FLOTANTE -->
+  <button type="button" id="reproductor-flotante" class="hidden fixed top-4 right-4 bg-white/90 backdrop-blur-md border border-stone-200 px-3.5 py-2 rounded-full shadow-md flex items-center space-x-2 z-50 cursor-pointer active:scale-95 transition" onclick="toggleMusica()">
+    <span id="icono-disco" class="text-sm inline-block">💿</span>
+    <span id="texto-musica" class="text-xs text-stone-700 font-semibold">Música OFF</span>
+  </button>
+
+  <!-- AUDIO OFICIAL (CATBOX) -->
+  <audio id="audio-fondo" crossorigin="anonymous" preload="auto" loop>
+    <source src="https://files.catbox.moe/kkpp41.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- PANTALLA 1: INTERACCIÓN INICIAL -->
+  <div id="pantalla-inicio" class="w-full max-w-sm text-center flex flex-col items-center justify-center space-y-5">
+    <div class="inline-block bg-stone-200/60 px-3 py-1 rounded-full text-xs tracking-widest uppercase text-stone-500 mb-1">
+      🏁 Meta de hoy
+    </div>
+    <h1 class="serif-title italic text-3xl text-stone-700">Mi amor</h1>
+    <p class="serif-title italic text-lg text-stone-500">Toca el corazón varias veces para dar la largada...</p>
+    
+    <button type="button" onclick="cargarAmor()" class="text-5xl transition-transform active:scale-125 focus:outline-none select-none my-2 cursor-pointer">
+      ❤️
+    </button>
+
+    <div class="w-48 h-2.5 bg-stone-200 rounded-full overflow-hidden shadow-inner">
+      <div id="barra-progreso" class="h-full bg-amber-600/80 transition-all duration-300" style="width: 15%;"></div>
+    </div>
+    <p id="porcentaje-texto" class="text-xs text-stone-400">15% completado</p>
+  </div>
+
+  <!-- PANTALLA 2: CONTENIDO PRINCIPAL -->
+  <div id="pantalla-principal" class="hidden w-full max-w-sm flex-col items-center space-y-6 fade-in pb-12">
+    
+    <header class="text-center mt-4">
+      <span class="text-xs uppercase tracking-widest text-amber-700/80 font-medium">✨ Feliz Cumpleaños ✨</span>
+      <h2 class="serif-title italic text-3xl leading-tight text-stone-700 mt-1">
+        A mi compañera de ruta favorita
+      </h2>
+    </header>
+
+    <!-- Badge de Ruta -->
+    <div class="w-full bg-white/70 border border-stone-200/80 rounded-lg p-3 flex justify-around text-center shadow-xs">
+      <div>
+        <span class="block text-[10px] uppercase tracking-wider text-stone-400">Ritmo</span>
+        <span class="serif-title text-base font-bold text-stone-700">Perfecto ❤️</span>
+      </div>
+      <div class="border-r border-stone-200"></div>
+      <div>
+        <span class="block text-[10px] uppercase tracking-wider text-stone-400">Destino</span>
+        <span class="serif-title text-base font-bold text-stone-700">Tus brazos</span>
+      </div>
+    </div>
+
+    <!-- Carrusel estilo Polaroid con descripciones exactas por foto -->
+    <div class="w-full bg-white p-4 pb-6 rounded-sm shadow-lg border border-stone-100 relative">
+      <div class="aspect-square bg-stone-100 overflow-hidden relative rounded-xs">
+        <img id="foto-actual" src="" alt="Recuerdo" class="w-full h-full object-cover transition-opacity duration-300">
+        
+        <button type="button" onclick="cambiarFoto(-1)" class="absolute left-2 top-1/2 -translate-y-1/2 bg-white/75 hover:bg-white text-stone-700 w-8 h-8 rounded-full shadow flex items-center justify-center text-sm cursor-pointer">❮</button>
+        <button type="button" onclick="cambiarFoto(1)" class="absolute right-2 top-1/2 -translate-y-1/2 bg-white/75 hover:bg-white text-stone-700 w-8 h-8 rounded-full shadow flex items-center justify-center text-sm cursor-pointer">❯</button>
+      </div>
+
+      <div class="mt-4 text-center">
+        <div id="indicadores" class="flex justify-center space-x-1.5 mb-2"></div>
+        <p id="pie-foto" class="handwriting text-2xl text-stone-600"></p>
+      </div>
+    </div>
+
+    <!-- Sobre cerrado / Carta -->
+    <div class="w-full">
+      <div id="sobre-cerrado" onclick="abrirSobre()" class="bg-[#e8dcc4] border border-[#d8c8a8] h-32 rounded-md shadow-md relative flex items-center justify-center cursor-pointer overflow-hidden transition hover:shadow-lg">
+        <div class="absolute inset-0 border-t-[64px] border-t-[#dfd0b2] border-x-[170px] border-x-transparent pointer-events-none"></div>
+        <div class="z-10 w-12 h-12 bg-red-800 rounded-full shadow-md flex items-center justify-center border-2 border-red-900/50 transition-transform hover:scale-105">
+          <span class="serif-title italic text-amber-100 text-xs">Mensaje</span>
+        </div>
+      </div>
+
+      <div id="carta-abierta" class="hidden bg-[#d5e0d5] p-5 rounded-md shadow-md border border-[#c2d1c2] fade-in">
+        <div class="text-center text-xs mb-2 text-rose-700">🏃‍♀️ ❤️ 🏔️</div>
+        <p class="serif-title text-base leading-relaxed text-stone-700 space-y-2">
+          Dicen que las mejores rutas no se miden en kilómetros, sino en las personas con las que compartes el camino.<br><br>
+          Contigo aprendí que el ritmo ideal es el que se lleva de la mano, disfrutando cada paisaje y cada risa.<br><br>
+          Gracias por ser mi meta favorita todos los días. ¡Feliz cumpleaños, mi amor!
+        </p>
+      </div>
+    </div>
+
+    <!-- VELA DE CUMPLEAÑOS -->
+    <div class="w-full bg-white/80 border border-stone-200 rounded-lg p-5 text-center shadow-sm space-y-3">
+      <p class="serif-title italic text-xl text-stone-700">Pide un deseo y toca la vela</p>
+      
+      <div onclick="apagarVela()" class="inline-flex flex-col items-center cursor-pointer select-none my-2 group">
+        <div id="llama" class="text-3xl llama-viva transition-opacity duration-500">🔥</div>
+        <div class="w-4 h-12 bg-gradient-to-b from-amber-100 to-amber-200 border border-amber-300 rounded-t-sm shadow-xs"></div>
+        <div class="w-24 h-6 bg-rose-200/80 border border-rose-300 rounded-t-lg mt-0.5 flex items-center justify-center">
+          <span class="text-[10px] text-rose-700 font-medium">✨ 🎂 ✨</span>
+        </div>
+      </div>
+
+      <p id="estado-deseo" class="text-xs text-stone-500">Toca el fuego para soplar...</p>
+    </div>
+
+    <!-- TARJETA RASCA Y GANA UNIFICADA -->
+    <div class="w-full space-y-3">
+      <div class="text-center">
+        <h3 class="serif-title italic text-xl text-stone-700">Tarjeta de Cumpleaños</h3>
+        <p class="text-xs text-stone-400">Toca la tarjeta para raspar y descubrir tus sorpresas</p>
+      </div>
+
+      <div class="rasca-card bg-gradient-to-r from-amber-50 to-rose-50 border-2 border-amber-500 p-5 rounded-md shadow-md" onclick="rasparTarjeta(this)">
+        <div class="z-0 space-y-3 text-left">
+          <div class="flex justify-between items-center border-b border-amber-200/60 pb-2">
+            <div>
+              <span class="text-[10px] uppercase tracking-wider text-rose-700 font-extrabold block">⭐ TUS PREMIOS DE HOY ⭐</span>
+              <span class="serif-title text-lg font-bold text-stone-800">¡Aventura y celebración!</span>
+            </div>
+            <span class="text-3xl">🎁</span>
+          </div>
+          
+          <ul class="space-y-2 text-stone-700 text-sm font-medium">
+            <li class="flex items-center space-x-2">
+              <span>🚲</span>
+              <span><strong>Bicicleta MTB nueva</strong> para nuestras próximas rutas.</span>
+            </li>
+            <li class="flex items-center space-x-2">
+              <span>🍷</span>
+              <span><strong>Cena romántica</strong> en el lugar que tú elijas.</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Capa para raspar -->
+        <div class="rasca-cover">
+          <span class="text-sm font-bold uppercase tracking-widest text-amber-100">✨ Toca para raspar la tarjeta ✨</span>
+          <span class="text-xs text-amber-200/90 mt-1">¡Descubre tus regalos de cumpleaños!</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Descripciones sincronizadas exactamente con el orden de tus 5 fotos:
+    const recuerdos = [
+      {
+        url: "https://lh3.googleusercontent.com/d/1p_H2SOLyMR20ramSI_wy6x9wSYP-jhJO",
+        texto: "Nuestra aventura en Galápagos 🏔️✨"
+      },
+      {
+        url: "https://lh3.googleusercontent.com/d/1FXZUgj49mWn9Dnc3HcGFYvqIsqDhOvYv",
+        texto: "Noche mágica frente a la catedral 🌃"
+      },
+      {
+        url: "https://lh3.googleusercontent.com/d/1XaIKcgfrlxVDGrnDX5oTlTYNqtckJN3P",
+        texto: "Momentos hermosos contigo ❤️"
+      },
+      {
+        url: "https://lh3.googleusercontent.com/d/1OIbILDHGYyh3aT9S1UVZ-AtQg4fUHxVQ",
+        texto: "Disfrutando de la vista y el camino 🌲"
+      },
+      {
+        url: "https://lh3.googleusercontent.com/d/16ds6sigPIBgc5Q8_PTR4ALN2Njo4V3Cy",
+        texto: "Celebrando tu cumpleaños, mi vida 🥂"
+      }
+    ];
+
+    const audio = document.getElementById('audio-fondo');
+    let progreso = 15;
+
+    function cargarAmor() {
+      progreso += 29;
+      if (progreso > 100) progreso = 100;
+      
+      document.getElementById('barra-progreso').style.width = progreso + '%';
+      document.getElementById('porcentaje-texto').innerText = progreso + '% completado';
+
+      if (progreso >= 100) {
+        confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
+        document.getElementById('reproductor-flotante').classList.remove('hidden');
+
+        audio.play().then(() => {
+          document.getElementById('icono-disco').classList.add('spinning');
+          document.getElementById('texto-musica').innerText = "Música ON";
+        }).catch(() => {});
+
+        setTimeout(() => {
+          document.getElementById('pantalla-inicio').classList.add('hidden');
+          const principal = document.getElementById('pantalla-principal');
+          principal.classList.remove('hidden');
+          principal.classList.add('flex');
+          mostrarFoto(0);
+        }, 400);
+      }
+    }
+
+    function toggleMusica() {
+      const icono = document.getElementById('icono-disco');
+      const texto = document.getElementById('texto-musica');
+      
+      if (audio.paused) {
+        audio.play().then(() => {
+          icono.classList.add('spinning');
+          texto.innerText = "Música ON";
+        }).catch(() => {});
+      } else {
+        audio.pause();
+        icono.classList.remove('spinning');
+        texto.innerText = "Música OFF";
+      }
+    }
+
+    let indiceActual = 0;
+    function mostrarFoto(index) {
+      indiceActual = (index + recuerdos.length) % recuerdos.length;
+      document.getElementById('foto-actual').src = recuerdos[indiceActual].url;
+      document.getElementById('pie-foto').innerText = recuerdos[indiceActual].texto;
+      
+      const cont = document.getElementById('indicadores');
+      cont.innerHTML = '';
+      recuerdos.forEach((_, i) => {
+        const dot = document.createElement('span');
+        dot.className = `h-1.5 w-1.5 rounded-full ${i === indiceActual ? 'bg-stone-600' : 'bg-stone-300'}`;
+        cont.appendChild(dot);
+      });
+    }
+
+    function cambiarFoto(direccion) {
+      mostrarFoto(indiceActual + direccion);
+    }
+
+    function abrirSobre() {
+      document.getElementById('sobre-cerrado').classList.add('hidden');
+      document.getElementById('carta-abierta').classList.remove('hidden');
+      confetti({ particleCount: 50, spread: 50, origin: { y: 0.7 } });
+    }
+
+    let velaApagada = false;
+    function apagarVela() {
+      if (velaApagada) return;
+      velaApagada = true;
+      
+      const llama = document.getElementById('llama');
+      llama.innerText = '💨';
+      llama.classList.remove('llama-viva');
+      
+      document.getElementById('estado-deseo').innerHTML = '<strong class="text-amber-700">¡Deseo pedido! Que todos tus sueños se cumplan ✨</strong>';
+      confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+    }
+
+    function rasparTarjeta(cardElement) {
+      if (cardElement.classList.contains('raspado')) return;
+      
+      cardElement.classList.add('raspado');
+
+      confetti({ particleCount: 150, spread: 100, origin: { y: 0.7 } });
+      setTimeout(() => {
+        confetti({ particleCount: 100, angle: 60, spread: 55, origin: { x: 0 } });
+        confetti({ particleCount: 100, angle: 120, spread: 55, origin: { x: 1 } });
+      }, 250);
+    }
+  </script>
+</body>
+</html>
